@@ -61,7 +61,7 @@ The model was trained and validated on different data sets to ensure that the mo
 
 #### 3. Model parameter tuning
 
-The model used an adam optimizer, so the learning rate was not tuned manually (model.py line 25). Used 0.2 as a correction angle to include side camera images in data set. 
+The model used an adam optimizer, so the learning rate was not tuned manually. Used 0.2 as a correction angle to include side camera images in data set. 
 
 #### 4. Appropriate training data
 
@@ -75,52 +75,49 @@ For details about how I created the training data, see the next section.
 
 The model architecture was derived in iterations. First I tried with a simple model then LeNet and finally cameup with a model inspired by the architecture published by Nvidia team.
 
-First, I created a data loading pipeline using generators so that I could train and test with more data without consuing huge aount memory. established a solid data loading and processing pipeline to allow faster adjustment to the modeling part in the next steps. For this reason, the generators to stream training and validation data from disk were implemented in data_pipe.py in such a way that I could easily add more training and validation data. The data is organized in the folders under data, each sub folder corresponds to different runs (explained later) and if a new folder is added this is automatically added by the generators to the training / validation loop. Also, I wrote a fabric file to easily upload data and code to AWS, train the model and download the result to run the simulation locally
+First, I created a data loading pipeline using generators so that I could train and test with more data without consuing huge amount of memory. 
 
-My first step was to use a convolution neural network model similar to the ... I thought this model might be appropriate because ...
+I created a simple model, when tested noticed that the MSE is high on both training and validatation data sets. This an evidense of underfitting. The obvious solution is to add more convolutions.
 
-In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I found that my first model had a low mean squared error on the training set but a high mean squared error on the validation set. This implied that the model was overfitting. 
+I've graduallly increased number of layers and achieved low mean square error for training set but with little higher for validation set. To avoid this overfitting, I introduced dropout layers.
 
-To combat the overfitting, I modified the model so that ...
-
-Then I ... 
-
-The final step was to run the simulator to see how well the car was driving around track one. There were a few spots where the vehicle fell off the track... to improve the driving behavior in these cases, I ....
+The final step was to run the simulator to see how well the car was driving around track one. There were a few spots where the vehicle fell off the track especially near the lake and on the bridge. To improve the driving behaviour in these cases, I collected revovery data when the car is driving from side of the road back to center.
 
 At the end of the process, the vehicle is able to drive autonomously around the track without leaving the road.
 
-####2. Final Model Architecture
+#### 2. Final Model Architecture
 
-The final model architecture (model.py lines 18-24) consisted of a convolution neural network with the following layers and layer sizes ...
+The final model architecture consisted of a convolution neural network with 5 convolution layers and 4 fully connected layers.
 
-Here is a visualization of the architecture (note: visualizing the architecture is optional according to the project rubric)
+Before the first convolution layer, I've added a Lambda layer to do image normalization. Performing normalization in the network model allows normalizing the input images when tested in simulator as well, no additional code required to preprocess them.
 
-![alt text][image1]
+Five convolutional layers were added to extract the image features fully instead of lines or shapes. First 3 layers with 5x5 kernals of 2x2 strides. Next 2 layers are with 3x3 kernal size.
 
-####3. Creation of the Training Set & Training Process
+Following the convolution layers are the four fully connected layers with output sizes of 100, 50, 10 and 1 (output layer) respectively.
+
+#### 3. Creation of the Training Set & Training Process
 
 To capture good driving behavior, I first recorded two laps on track one using center lane driving. Here is an example image of center lane driving:
 
-![alt text][image2]
+![Center][image1]
 
-I then recorded the vehicle recovering from the left side and right sides of the road back to center so that the vehicle would learn to .... These images show what a recovery looks like starting from ... :
+I have also recorded by driving vehicle in opposite direction of the track so that the model generalizes well.
+
+I then recorded the vehicle recovering from the left side and right sides of the road back to center so that the vehicle would learn to get back on track if it gets off to the side of the road.
+
+These images show what a recovery looks like from left and right side of the road. :
 
 ![alt text][image3]
 ![alt text][image4]
-![alt text][image5]
 
-Then I repeated this process on track two in order to get more data points.
 
-To augment the data sat, I also flipped images and angles thinking that this would ... For example, here is an image that has then been flipped:
+To augment the data sat, I also flipped images and angles thinking that this would help model to train on how to steer clock-wise and also anti-clockwise directions. For example, here is an image that has then been flipped:
 
 ![alt text][image6]
 ![alt text][image7]
 
-Etc ....
+After the collection process, I had about 120000 number of data points. I then preprocessed this data by croping top and bottom rows of pixels to avoid unimportant details such as sky, trees and the vehicle bannet that appears in bottom portion of image.
 
-After the collection process, I had X number of data points. I then preprocessed this data by ...
+I finally randomly shuffled the data set and put 20% of the data into a validation set. 
 
-
-I finally randomly shuffled the data set and put Y% of the data into a validation set. 
-
-I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was Z as evidenced by ... I used an adam optimizer so that manually training the learning rate wasn't necessary.
+I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs found to be 4. I used an adam optimizer so that manually training the learning rate wasn't necessary.
